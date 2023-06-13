@@ -1,5 +1,5 @@
 from getpass import getpass
-from keystone import KeystoneClass
+from Keystone import KeystoneClass
 from Neutron import NeutronClass
 from Nova import NovaClass
 from Glance import GlanceClass
@@ -17,11 +17,8 @@ def crearKeyPair(Nova):
     rutaLlave = input("| Ingrese la ruta en el equipo de la llave pública: ")
     Nova.crearLLave(nombreLlave, rutaLlave)
 
-def configurarGrupoSeguridad(Nova):
-    configurarGrupoSeguridad(Nova)
-
 #Funcion que permite configurar un SecurityGroup
-def configurarSecurityGroup(nova):
+def configurarGrupoSeguridad(nova):
     while True:
         print("|------------------------------------|")
         print("|1. Añadir Regla                     |")

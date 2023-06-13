@@ -3,7 +3,7 @@ import json
 
 class KeystoneClass(object):
     def __init__(self,username, password):
-        self.auth_url = "http://10.20.12.39:5000/v3"
+        self.auth_url = "http://10.20.12.48:5000/v3"
         self.username = username
         self.password = password
         self.token = None
