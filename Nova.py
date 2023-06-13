@@ -54,8 +54,6 @@ class NovaClass(object):
 
         if response.status_code == 200:
             print(response.json()['servers'])
-            instances = response.json()['servers']
-            print(instances)
             print("[*] Instancias listadas correctamente\n")
             
         else:
@@ -67,7 +65,7 @@ class NovaClass(object):
             'keypair': {
                 'name': nombreLlave,
                 'type': "ssh",
-                'public_key': rutaLlave #VERIFICAR
+                'public_key': rutaLlave #VERIFICAR -> SI ES LA RUTA O EL VALOR DE LA KEYPAIR COMO TAL 
             }
         }
         response = requests.post(self.nova_url + '/os-keypairs', json=keypair, headers=self.headers)

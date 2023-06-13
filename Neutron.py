@@ -22,7 +22,7 @@ class NeutronClass(object):
         response = requests.post(self.neutron_url + 'networks', json=network_data, headers=self.headers)
 
         if response.status_code == 201: 
-            networkID = response.json()['networks'][0]['id']
+            networkID = response.json()['networks']['id']
             self.NetworkID = networkID
             
             subnet_data = {
