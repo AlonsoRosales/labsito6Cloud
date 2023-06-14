@@ -24,6 +24,7 @@ def configurarGrupoSeguridad(nova):
         print("|------------------------------------|")
         print("|1. Añadir Regla                     |")
         print("|2. Elimnar Regla                    |")
+        print("|4. Crear otro grupo de seguridad    |")
         print("|3. Salir                            |")
         print("|------------------------------------|")
         opcion = input("| Ingrese una opción: ")
