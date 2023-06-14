@@ -182,32 +182,31 @@ def getSecurityGroupID(nova):
             break
     return nova.obtenerIDSecurityGroup(securitygroup)
 
-def crearVM(Neutron, Nova, Glance):
+def crearVM(Neutron, Nova, Glance, username):
     nombreVM = input("| Ingrese el nombre de la VM: ")
     print("\n")
-    
+    Nova.listarFlavors()
     flavorID = getFlavorsID(Nova)
     print("\n")
-    
+    Glance.listarImagenes()
     imagenID = getImagenesID(Glance)
     print("\n")
-    
+    Neutron.listarRedes()
     redID = getRedID(Neutron)
     print("\n")
-    
+    Nova.listarKeyPair(username)
     llave = getKeyPairID(Nova,Keystone)
     print("\n")
-    
+    Nova.listarSecurityGroup()
     securityGroup = getSecurityGroupID(Nova)
     print("\n")
-
     Nova.crearVM(nombreVM,flavorID,imagenID,redID,llave,securityGroup)
 
 
 def listarVMs(Nova):
     Nova.listarVMs()
 
-def  Menu(Neutron, Nova, Glance):
+def  Menu(Neutron, Nova, Glance, username):
     while True:
         print("|- Opción 1 -> Crear provider network            |")
         print("|- Opción 2 -> Crear keypair                     |")
@@ -227,7 +226,7 @@ def  Menu(Neutron, Nova, Glance):
             configurarGrupoSeguridad(Nova)
             
         elif int(opcion) == 4:
-            crearVM(Neutron, Nova, Glance)
+            crearVM(Neutron, Nova, Glance,username)
             
         elif int(opcion) == 5:
             listarVMs(Nova)
@@ -253,7 +252,7 @@ while True:
             Glance = GlanceClass(Keystone.getUserID(),Keystone.getProjectName(),Keystone.getToken())
             
             print("[*] Login exitoso\n")
-            Menu(Neutron, Nova, Glance)
+            Menu(Neutron, Nova, Glance,username)
             break
             
         else:
