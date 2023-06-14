@@ -3,7 +3,7 @@ import json
 
 class GlanceClass(object):
     def __init__(self,UserID,ProjectName,token):
-        self.glance_url = "http://10.20.12.39:9292/v2"
+        self.glance_url = "http://10.20.12.48:9292/v2.1"
         self.headers = { 'Content-Type': 'application/json','X-Auth-Token': token }
         self.UserID = UserID
         self.ProjectName = ProjectName

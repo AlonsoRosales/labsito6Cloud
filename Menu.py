@@ -20,6 +20,7 @@ def crearKeyPair(Nova):
 #Funcion que permite configurar un SecurityGroup
 def configurarGrupoSeguridad(nova):
     while True:
+        list_sg=Nova.listarSecurityGroup()
         print("|------------------------------------|")
         print("|1. Añadir Regla                     |")
         print("|2. Elimnar Regla                    |")

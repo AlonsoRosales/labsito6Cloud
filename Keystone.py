@@ -51,10 +51,12 @@ class KeystoneClass(object):
         response = requests.post(self.auth_url+"/auth/tokens",
                                  json=auth_data,
                                  headers=self.headers)
+        
 
         if response.status_code == 201:
             self.token = response.headers['X-Subject-Token']
             self.UserID = response.json()["token"]["user"]['id']
+            print(self.token)
             return 1
             
         else:
