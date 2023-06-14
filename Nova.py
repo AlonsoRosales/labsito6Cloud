@@ -1,5 +1,6 @@
 import requests
 import json
+from Glance import GlanceClass
 
 class NovaClass(object):
     def __init__(self,UserID,ProjectName,token):
@@ -10,15 +11,20 @@ class NovaClass(object):
         }
         self.UserID = UserID
         self.ProjectName = ProjectName
+        self.token = token
+
         
     #Funcion para listar flavors
     def listarFlavors(self):
         response = requests.get(self.nova_url + '/flavors', headers=self.headers)
+        flavor_list=[]
         if response.status_code == 200:
             flavors = response.json()['flavors']
-            print(flavors)
-            print("[*] Flavors listados correctamente\n")
-            
+
+            for flavor in flavors:
+                flavorcito=self.obtenerDetallesFlavorVM(flavor['id'])
+                flavor_list.append([flavorcito,flavor['id']])
+            return flavor_list 
         else:
             print("[*] Ha ocurrido un error al listar los flavors\n")
     
@@ -40,8 +46,9 @@ class NovaClass(object):
                 ]
             }
         }
-        response = requests.post(self.nova_url + '/servers', json=instance_data, headers=self.headers)
 
+        response = requests.post(self.nova_url + '/servers', json=instance_data, headers=self.headers)
+ 
         if response.status_code == 202:
             print("[*] VM creada exitosamente\n")
             
@@ -53,11 +60,103 @@ class NovaClass(object):
         response = requests.get(self.nova_url + '/servers', headers=self.headers)
 
         if response.status_code == 200:
-            print(response.json()['servers'])
-            print("[*] Instancias listadas correctamente\n")
+            servers=response.json()['servers']
+                
+            for index,server in enumerate(servers):
+                print(f"{index + 1}. Nombre: {server['name']}")
+                name_server=server['name']
             
+            nombre_vm = input("| Ingrese el nombre de la vm: ")
+            print("|-------------------------")
+            vm_id = None  # Variable para almacenar el ID de la VM
+
+            for server in servers:
+                name_server = server['name']
+                if name_server == nombre_vm:
+                    vm_id = server['id']
+                    break  # Salir del bucle si se encuentra el nombre de la VM
+
+            if vm_id is not None:
+                pass
+            else:
+                print("No se encontró ninguna VM con el nombre especificado.")
+            self.mostrarDetallesServidor(vm_id)
         else:
             print("[*] Ha ocurrido un error al listar las VMS\n")
+
+
+    def mostrarDetallesServidor(self, server_id):
+        url = f"{self.nova_url}/servers/{server_id}"
+        response = requests.get(url, headers=self.headers)
+
+        if response.status_code == 200:
+            server_details = response.json().get('server', {})
+            print("Detalles del servidor:")
+            print("Nombre:", server_details.get('name'))
+            print("Flavor:")
+            flavor = server_details.get('flavor', {})
+            id_flavor=flavor.get('id')
+            self.obtenerDetallesFlavor(id_flavor)
+
+            print("Imagen:")
+            image = server_details.get('image', {})
+            id_image=image.get('id') 
+
+            glance = GlanceClass(self.UserID,self.ProjectName,self.token)  # Crear una instancia de la clase GlanceClass
+            glance.obtenerDetallesImagen(id_image)
+
+            print("Llave:")
+            keypair = server_details.get('key_name')
+            print("  - Nombre:", keypair)
+            print("Red:")
+            addresses = server_details.get('addresses', {})
+            
+            for network, ip_list in addresses.items():
+                print(f"  - {network}:")
+                for ip in ip_list:
+                    print(f"    - IP: {ip.get('addr')}")
+        else:
+            print("Error al obtener los detalles del servidor:", response.status_code)
+
+    def obtenerDetallesFlavor(self, flavor_id):
+        url = f"{self.nova_url}/flavors/{flavor_id}"
+        response = requests.get(url, headers=self.headers)
+
+        if response.status_code == 200:
+            flavor_details = response.json().get('flavor', {})
+            flavor_name = flavor_details.get('name', '')
+            flavor_vcpus = flavor_details.get('vcpus', '')
+            flavor_ram = flavor_details.get('ram', '')
+            flavor_disk = flavor_details.get('disk', '')
+
+            print("Detalles del Flavor:")
+            print("     Nombre:", flavor_name)
+            print("     vCPUs:", flavor_vcpus)
+            print("     RAM:", flavor_ram)
+            print("     Disco:", flavor_disk)
+        else:
+            print("Error al obtener los detalles del Flavor:", response.status_code)
+
+    def obtenerDetallesFlavorVM(self, flavor_id):
+        url = f"{self.nova_url}/flavors/{flavor_id}"
+        response = requests.get(url, headers=self.headers)
+        flavors1=[]
+
+        if response.status_code == 200:
+            flavor_details = response.json().get('flavor', {})
+            flavor_name = flavor_details.get('name', '')
+            flavor_vcpus = flavor_details.get('vcpus', '')
+            flavor_ram = flavor_details.get('ram', '')
+            flavor_disk = flavor_details.get('disk', '')
+
+            flavors1.append([flavor_name,flavor_vcpus,flavor_ram,flavor_disk])
+            return flavors1
+
+        else:
+            print("Error al obtener los detalles del Flavor:", response.status_code)
+
+    
+
     
 #Funcion para crear la keypair
     def crearLLave(self,nombreLlave, rutaLlave):
@@ -83,10 +182,11 @@ class NovaClass(object):
         else:
             print("Error al crear el keypair:", response.status_code)
 
+
             
     
 #Listar keypairs
-    def listarKeyPair(self, user):
+    def listarKeyPair(self):
         url = f"{self.nova_url}/os-keypairs"
         response = requests.get(url, headers=self.headers)
 
@@ -99,16 +199,11 @@ class NovaClass(object):
                 keypair_names = []
                 for keypair in keypairs:
                     keypair_name = keypair['keypair']['name']
-                    info = self.infoKeyPair(keypair_name, user)
-                    if info[5] == user:
-                        keypair_names.append(keypair_name)
+                    keypair_names.append(keypair_name)
 
                 if len(keypair_names) == 0:
-                    print("No se encontraron keypairs para el usuario:", user)
-                else:
-                    print("Keypairs del usuario", user, ":")
-                    for name in keypair_names:
-                        print("- Nombre del Keypair:", name)
+                    print("No se encontraron keypairs para el usuario")
+                
 
                 return keypair_names
         else:
@@ -124,7 +219,7 @@ class NovaClass(object):
             }
         }
 
-        response = requests.post(url, json=data, headers=self.headers_security)
+        response = requests.post(url, json=data, headers=self.headers)
 
         if response.status_code == 200:
             security_group = response.json().get('security_group', {})
@@ -144,9 +239,7 @@ class NovaClass(object):
             lista_sg = []
             for index,sg in enumerate(security_groups):
                 print(f"{index + 1}. Nombre: {sg['name']}")
-                print("   Descripción:", sg['description'])
-                #print("ID:", sg['id'])
-                print("----------")
+                print(      sg['description'])
                 lista_sg.append([sg['name'], sg['description']])
             return lista_sg
         else:
@@ -154,20 +247,31 @@ class NovaClass(object):
 
 #Agregar regla
     def agregarRegla(self,nombre,protocol_ip,from_port,dest_port,cidr):
+
         
         id_security=self.obtenerIDSecurityGroup(nombre)
+       
 
-        url = f"{self.nova_url}/v2.1/os-security-group-rules"
+        url = f"{self.nova_url}/os-security-group-rules"
+      
         data = {
             'security_group_rule': {
                 'parent_group_id': id_security,
+                'direction': 'ingress',
+                'ethertype': 'IPv4',
                 'ip_protocol': protocol_ip,
                 'from_port': from_port,
                 'to_port': dest_port,
-                'cidr': cidr
+                'remote_ip_prefix': cidr
+                
             }
         }
-        response = requests.post(url, json=data, headers=self.headers_security_rule)
+
+        print(data)
+
+       
+    
+        response = requests.post(url, json=data, headers=self.headers)
         if response.status_code == 200:
             security_group_rule = response.json().get('security_group_rule', {})
             print("Regla de seguridad agregada exitosamente:")
@@ -181,11 +285,12 @@ class NovaClass(object):
 
 #Obtener ID de securitygroup
     def obtenerIDSecurityGroup(self,securitygroup):
-        url = f"{self.nova_url}/v2.1/os-security-groups"
+        url = f"{self.nova_url}/os-security-groups"
         response = requests.get(url, headers=self.headers)
 
         if response.status_code == 200:
             security_groups = response.json().get('security_groups', [])
+
             for sg in security_groups:
                 if sg['name'] == securitygroup:
                     print("ID del Grupo de seguridad:", sg['id'])

@@ -17,7 +17,6 @@ class NeutronClass(object):
         
 #Funcion para crear red provider 
     def crearRedProvider(self, red,subred,cidr,gateway):
-        print(self.token)
         network_data = {
                 "network": {
                 "admin_state_up": True,
@@ -43,14 +42,14 @@ class NeutronClass(object):
             subnet_data = {
                 'subnet': {
                     'network_id': network_id,
+                    "name": subred,
                     "ip_version": 4,
                     'cidr': cidr,
                     #'gateway_ip': gateway
                 }
             }
             
-            response = requests.post(self.neutron_url + 'subnets', json=subnet_data, headers=self.headers)
-            print(response.json())
+            response = requests.post(self.neutron_url + '/subnets', json=subnet_data, headers=self.headers)
             if response.status_code == 201:
                 self.NetworkID = network_id
                 print("[*] Red Provider creada exitosamente\n")
@@ -61,15 +60,34 @@ class NeutronClass(object):
         
     #Funcion para listar redes 
     def listarRedes(self):
-        response = requests.get(self.neutron_url + 'networks', headers=self.headers)
+        response = requests.get(self.neutron_url + '/networks', headers=self.headers)
+        listado=[]
 
         if response.status_code == 200:
             networks = response.json()['networks']
-            print(networks)
-            #COMPLETAR
+            for network in networks:
+                subnet_list = network['subnets']
+                subnet_number = subnet_list[0]
+                cidr=self.mostrarDetallesSubred(subnet_number)
+                listado.append([network['name'],cidr,network['id']])
+            return listado
+
             
         else:
             print("[*] Ha ocurrido un problema al listar las redes\n")
+
+
+
+    def mostrarDetallesSubred(self, subnet_id):
+        url = f"{self.neutron_url}/subnets/{subnet_id}"
+        response = requests.get(url, headers=self.headers)
+
+        if response.status_code == 200:
+            subnet_details = response.json().get('subnet', {})
+            subnet_cidr = subnet_details.get('cidr', '')
+            return subnet_cidr
     
-   
+        else:
+            print("Error al obtener los detalles de la subred:", response.status_code)
+
         

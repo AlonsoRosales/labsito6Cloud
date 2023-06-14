@@ -56,7 +56,6 @@ class KeystoneClass(object):
         if response.status_code == 201:
             self.token = response.headers['X-Subject-Token']
             self.UserID = response.json()["token"]["user"]['id']
-            print(self.token)
             return 1
             
         else:
